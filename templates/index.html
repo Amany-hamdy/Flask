@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Image Prediction</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #BFC6F2;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .box {
+      margin-bottom: 20px;
+      background-color: #BFC6F2;
+
+    }
+
+    .upload-btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .predict-btn {
+      background-color: #008CBA;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .output-label {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .selected-image {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Image Prediction</h1>
+  <div class="container">
+    <div class="box">
+      <input type="file" id="image-upload" accept="image/*" style="display: none;">
+      <button id="select-btn" class="upload-btn" style="background-color: #4555B5;">Select Image</button>
+    </div>
+    <div class="box">
+      <div id="image-preview"></div>
+      <button id="predict-btn" class="predict-btn" disabled style="background-color: #4555B5;">Predict Image</button>
+    </div>
+    <div id="output-label" class="output-label"></div>
+  </div>
+
+  <script>
+    // Get DOM elements
+    const selectBtn = document.getElementById('select-btn');
+    const predictBtn = document.getElementById('predict-btn');
+    const outputLabel = document.getElementById('output-label');
+    const imageUpload = document.getElementById('image-upload');
+    const imagePreview = document.getElementById('image-preview');
+
+    // Enable predict button when an image is selected
+    selectBtn.addEventListener('click', () => {
+      imageUpload.click();
+    });
+
+    imageUpload.addEventListener('change', () => {
+      const file = imageUpload.files[0];
+      if (file) {
+        predictBtn.disabled = false;
+        displayImagePreview(file);
+      }
+    });
+
+    // Function to display the selected image preview
+    function displayImagePreview(file) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        imagePreview.innerHTML = `<img class="selected-image" src="${e.target.result}" alt="Selected Image">`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Upload image and predict when predict button is clicked
+    predictBtn.addEventListener('click', () => {
+      const file = imageUpload.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+
+      fetch('/predict', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            outputLabel.textContent = data.error;
+          } else {
+            outputLabel.textContent = `Predicted Label: ${data.predicted_label}`;
+          }
+        })
+        .catch(error => {
+          outputLabel.textContent = 'An error occurred.';
+          console.error(error);
+        });
+    });
+  </script>
+</body>
+
+</html>
